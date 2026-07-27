@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="英検5級タイムアタック">
+<meta name="theme-color" content="#FFB6C1">
+<title>英検5級 タイムアタック</title>
+<style>
+/* ============================================================
+   英検5級 英単語タイムアタック - スタイル定義
+   パステルカラー × 丸み × ポップなDuolingo風デザイン
+   ============================================================ */
+:root{
+  --mint:#5FE0C3;
+  --mint-dark:#39C3A6;
+  --coral:#FF7E9D;
+  --coral-dark:#F4527A;
+  --sun:#FFD15C;
+  --sun-dark:#F4B400;
+  --sky:#6FC6F2;
+  --sky-dark:#3CA8E0;
+  --lav:#B9A8FF;
+  --lav-dark:#8E73F7;
+  --cream:#FFF8EF;
+  --card:#FFFFFF;
+  --ink:#3A3550;
+  --ink-soft:#7A7591;
+  --line:#F0E7DA;
+  --shadow: 0 8px 0 rgba(58,53,80,0.08);
+  --radius-lg:28px;
+  --radius-md:20px;
+  --radius-sm:14px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+[data-theme="dark"]{
+  --cream:#1E1B2E;
+  --card:#2A2640;
+  --ink:#F4F1FA;
+  --ink-soft:#B6AFD4;
+  --line:#3A3554;
+  --shadow: 0 8px 0 rgba(0,0,0,0.35);
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none;}
+html,body{
+  margin:0; padding:0; height:100%;
+  font-family:-apple-system, BlinkMacSystemFont, "Hiragino Maru Gothic ProN", "Yu Gothic", "Hiragino Sans", sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  overscroll-behavior:none;
+  -webkit-font-smoothing:antialiased;
+}
+#app{
+  position:relative;
+  width:100%;
+  min-height:100%;
+  max-width:560px;
+  margin:0 auto;
+  padding-top:var(--safe-top);
+  padding-bottom:calc(78px + var(--safe-bottom));
+  overflow-x:hidden;
+}
+/* ---- floating background blobs ---- */
+.bg-blob{
+  position:fixed; border-radius:50%; filter:blur(2px); opacity:.35; z-index:0; pointer-events:none;
+  animation: floaty 9s ease-in-out infinite;
+}
+@keyframes floaty{
+  0%,100%{ transform:translateY(0px) translateX(0px) scale(1); }
+  50%{ transform:translateY(-18px) translateX(10px) scale(1.06); }
+}
+.blob1{width:160px;height:160px;background:var(--sun);top:-40px;left:-50px;animation-delay:0s;}
+.blob2{width:120px;height:120px;background:var(--sky);top:120px;right:-40px;animation-delay:2s;}
+.blob3{width:140px;height:140px;background:var(--coral);bottom:140px;left:-50px;animation-delay:4s;}
+.blob4{width:100px;height:100px;background:var(--lav);bottom:40px;right:-30px;animation-delay:1s;}
+
+.screen{ position:relative; z-index:1; padding:18px 18px 10px; display:none; animation:fadein .35s ease; }
+.screen.active{display:block;}
+@keyframes fadein{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+/* ---- typography ---- */
+h1.title{
+  text-align:center; font-size:26px; font-weight:900; margin:10px 0 2px;
+  color:var(--coral-dark); letter-spacing:.5px;
+  text-shadow: 0 2px 0 rgba(255,255,255,.6);
+}
+.subtitle{ text-align:center; color:var(--ink-soft); font-size:13px; margin-bottom:18px; font-weight:700;}
+h2.section-title{ font-size:16px; font-weight:900; margin:18px 4px 10px; color:var(--ink);}
+
+/* ---- buttons ---- */
+.btn{
+  border:none; border-radius:999px; font-weight:900; cursor:pointer;
+  font-family:inherit; transition:transform .08s ease, box-shadow .08s ease;
+  -webkit-user-select:none;
+}
+.btn:active{ transform:translateY(4px); box-shadow:none !important; }
+.btn-big{
+  width:100%; padding:18px; font-size:20px; color:#fff;
+  background:linear-gradient(180deg, var(--mint) 0%, var(--mint-dark) 100%);
+  box-shadow:0 6px 0 var(--mint-dark);
+}
+.btn-outline{
+  width:100%; padding:14px; font-size:15px; background:var(--card); color:var(--ink);
+  border:2px solid var(--line); box-shadow:0 4px 0 var(--line);
+}
+
+/* ---- bottom nav ---- */
+.bottom-nav{
+  position:fixed; left:0; right:0; bottom:0; z-index:50;
+  max-width:560px; margin:0 auto;
+  background:var(--card); border-top:2px solid var(--line);
+  display:flex; justify-content:space-around; align-items:center;
+  padding:8px 4px calc(8px + var(--safe-bottom));
+}
+.nav-btn{
+  background:none; border:none; display:flex; flex-direction:column; align-items:center;
+  gap:2px; font-size:11px; font-weight:800; color:var(--ink-soft); padding:4px 10px; border-radius:14px;
+  font-family:inherit;
+}
+.nav-btn .ic{ font-size:22px; }
+.nav-btn.active{ color:var(--coral-dark); background:rgba(255,126,157,0.12); }
+
+/* ---- genre cards ---- */
+.genre-card{
+  background:var(--card); border-radius:var(--radius-lg); padding:16px 16px;
+  margin-bottom:14px; box-shadow:var(--shadow); border:2px solid var(--line);
+  display:flex; align-items:center; gap:14px;
+}
+.genre-emoji{
+  width:54px; height:54px; border-radius:18px; display:flex; align-items:center; justify-content:center;
+  font-size:26px; flex:none;
+}
+.g-adj .genre-emoji{ background:linear-gradient(160deg,var(--sun),var(--sun-dark)); }
+.g-noun .genre-emoji{ background:linear-gradient(160deg,var(--sky),var(--sky-dark)); }
+.g-phrase .genre-emoji{ background:linear-gradient(160deg,var(--lav),var(--lav-dark)); }
+.g-basic150 .genre-emoji{ background:linear-gradient(160deg,var(--coral),var(--coral-dark)); }
+.g-places .genre-emoji{ background:linear-gradient(160deg,var(--mint),var(--mint-dark)); }
+.g-sports .genre-emoji{ background:linear-gradient(160deg,var(--coral),var(--sun-dark)); }
+.g-weather .genre-emoji{ background:linear-gradient(160deg,var(--sky),var(--lav-dark)); }
+.genre-info{ flex:1; min-width:0; }
+.genre-info .gname{ font-weight:900; font-size:15px; margin-bottom:2px; }
+.genre-info .gstat{ font-size:11px; color:var(--ink-soft); font-weight:700; }
+.genre-play{
+  flex:none; border:none; border-radius:999px; padding:10px 16px; font-weight:900; color:#fff; font-size:13px;
+  background:linear-gradient(180deg, var(--coral), var(--coral-dark)); box-shadow:0 4px 0 var(--coral-dark);
+}
+
+/* ---- quiz screen ---- */
+.quiz-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;}
+.exit-btn{ background:var(--card); border:2px solid var(--line); border-radius:999px; width:34px; height:34px; font-size:15px; font-weight:900; color:var(--ink-soft); }
+.combo-badge{
+  background:linear-gradient(180deg, var(--sun), var(--sun-dark)); color:#5A3D00; font-weight:900;
+  padding:5px 12px; border-radius:999px; font-size:13px; box-shadow:0 3px 0 var(--sun-dark);
+  opacity:0; transform:scale(.6); transition:all .25s ease;
+}
+.combo-badge.show{ opacity:1; transform:scale(1); }
+.timer-num{ text-align:center; font-size:46px; font-weight:900; color:var(--ink); margin:2px 0 6px; font-variant-numeric:tabular-nums; line-height:1;}
+.timer-num.warn{ color:var(--coral-dark); animation:pulse .5s infinite; }
+@keyframes pulse{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.12);} }
+.timebar-track{ width:100%; height:14px; background:var(--line); border-radius:999px; overflow:hidden; margin-bottom:18px; }
+.timebar-fill{ height:100%; border-radius:999px; transition:width 1s linear, background-color .3s; background:var(--mint-dark); }
+.timebar-fill.blink{ animation:blinkbar .5s infinite; }
+@keyframes blinkbar{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+
+.score-row{ display:flex; justify-content:center; gap:18px; margin-bottom:14px; font-size:12px; font-weight:800; color:var(--ink-soft); }
+.score-row b{ color:var(--ink); font-size:14px; }
+
+.word-card{
+  background:var(--card); border-radius:var(--radius-lg); padding:34px 20px; text-align:center;
+  box-shadow:var(--shadow); border:2px solid var(--line); margin-bottom:20px; position:relative; min-height:120px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+}
+.word-en{ font-size:34px; font-weight:900; color:var(--ink); word-break:break-word; }
+.speak-btn{
+  width:54px; height:54px; border-radius:50%; border:none; font-size:22px;
+  background:linear-gradient(180deg, var(--sky), var(--sky-dark)); color:#fff; box-shadow:0 4px 0 var(--sky-dark);
+}
+.choices{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.choice-btn{
+  padding:18px 8px; border-radius:var(--radius-md); border:2px solid var(--line); background:var(--card);
+  font-size:15px; font-weight:800; color:var(--ink); box-shadow:0 4px 0 var(--line); min-height:64px;
+  display:flex; align-items:center; justify-content:center; text-align:center; line-height:1.3;
+}
+.choice-btn.correct{ background:linear-gradient(180deg,#C9F7D9,#9FE8B9); border-color:var(--mint-dark); box-shadow:0 4px 0 var(--mint-dark); color:#1F6B45;}
+.choice-btn.wrong{ background:linear-gradient(180deg,#FFD7DE,#FFB3C0); border-color:var(--coral-dark); box-shadow:0 4px 0 var(--coral-dark); color:#9B1A3A;}
+.choice-btn:disabled{ opacity:.55; }
+.choice-btn.shake{ animation:shake .4s; }
+@keyframes shake{ 0%,100%{transform:translateX(0);} 20%{transform:translateX(-8px);} 40%{transform:translateX(8px);} 60%{transform:translateX(-6px);} 80%{transform:translateX(6px);} }
+
+.judge-pop{
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) scale(0); font-size:64px; font-weight:900;
+  pointer-events:none; z-index:5; opacity:0;
+}
+.judge-pop.o{ color:var(--mint-dark); }
+.judge-pop.x{ color:var(--coral-dark); }
+.judge-pop.fire{ animation:popfire .55s ease forwards; }
+@keyframes popfire{ 0%{transform:translate(-50%,-50%) scale(.3); opacity:0;} 40%{transform:translate(-50%,-50%) scale(1.25); opacity:1;} 100%{transform:translate(-50%,-50%) scale(1) translateY(-30px); opacity:0;} }
+
+/* ---- particles (stars / confetti) ---- */
+.particle-layer{ position:fixed; inset:0; pointer-events:none; z-index:80; overflow:hidden; }
+.star-p{ position:absolute; font-size:18px; opacity:0; animation:starfly .8s ease forwards; }
+@keyframes starfly{
+  0%{ opacity:1; transform:translate(0,0) scale(.5) rotate(0deg); }
+  100%{ opacity:0; transform:var(--fly) scale(1.1) rotate(180deg); }
+}
+.confetti-p{ position:absolute; top:-20px; width:9px; height:14px; opacity:.95; animation:confettifall linear forwards; }
+@keyframes confettifall{
+  0%{ transform:translateY(0) rotate(0deg); opacity:1; }
+  100%{ transform:translateY(110vh) rotate(540deg); opacity:.9; }
+}
+
+/* ---- result screen ---- */
+.result-emoji{ text-align:center; font-size:56px; margin:10px 0; }
+.newrecord-banner{
+  text-align:center; font-weight:900; font-size:18px; color:#fff; padding:12px; border-radius:var(--radius-md);
+  background:linear-gradient(120deg,var(--sun),var(--coral)); margin-bottom:16px; box-shadow:0 4px 0 var(--coral-dark);
+  animation:wiggle 1s infinite;
+}
+@keyframes wiggle{ 0%,100%{transform:rotate(-1deg);} 50%{transform:rotate(1deg);} }
+.result-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
+.result-stat{ background:var(--card); border:2px solid var(--line); border-radius:var(--radius-md); padding:14px; text-align:center; box-shadow:var(--shadow); }
+.result-stat .val{ font-size:24px; font-weight:900; color:var(--coral-dark); }
+.result-stat .lbl{ font-size:11px; color:var(--ink-soft); font-weight:800; margin-top:2px; }
+.badge-unlock{
+  display:flex; align-items:center; gap:10px; background:linear-gradient(120deg,#FFF3CC,#FFE2A8);
+  border:2px solid var(--sun-dark); border-radius:var(--radius-md); padding:10px 14px; margin-bottom:10px; font-weight:800; font-size:13px; color:#7A5400;
+}
+
+/* ---- wrong list ---- */
+.wrong-row{
+  display:flex; align-items:center; gap:12px; background:var(--card); border:2px solid var(--line);
+  border-radius:var(--radius-md); padding:12px 14px; margin-bottom:10px; box-shadow:var(--shadow);
+}
+.wrong-en{ font-weight:900; font-size:16px; }
+.wrong-ja{ font-size:12px; color:var(--ink-soft); font-weight:700; }
+.wrong-tag{ font-size:10px; font-weight:800; color:#fff; padding:2px 8px; border-radius:999px; }
+.tag-adj{background:var(--sun-dark);} .tag-noun{background:var(--sky-dark);} .tag-phrase{background:var(--lav-dark);} .tag-basic150{background:var(--coral-dark);}
+.tag-places{background:var(--mint-dark);} .tag-sports{background:var(--sun-dark);} .tag-weather{background:var(--sky-dark);}
+.mini-speak{ width:38px; height:38px; border-radius:50%; border:none; background:var(--sky); color:#fff; font-size:16px; flex:none; }
+.empty-state{ text-align:center; color:var(--ink-soft); font-weight:700; padding:50px 20px; }
+.empty-state .ic{ font-size:42px; display:block; margin-bottom:10px; }
+
+/* ---- ranking ---- */
+.rank-card{ background:var(--card); border:2px solid var(--line); border-radius:var(--radius-lg); padding:16px; margin-bottom:14px; box-shadow:var(--shadow); }
+.rank-head{ display:flex; align-items:center; gap:10px; font-weight:900; font-size:15px; margin-bottom:10px; }
+.rank-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+.rank-grid div{ text-align:center; }
+.rank-grid .v{ font-weight:900; font-size:16px; color:var(--coral-dark); }
+.rank-grid .l{ font-size:10px; color:var(--ink-soft); font-weight:700; }
+
+/* ---- settings ---- */
+.set-row{
+  display:flex; align-items:center; justify-content:space-between; background:var(--card); border:2px solid var(--line);
+  border-radius:var(--radius-md); padding:14px 16px; margin-bottom:10px; box-shadow:var(--shadow);
+}
+.set-label{ font-weight:800; font-size:14px; }
+.set-sub{ font-size:11px; color:var(--ink-soft); font-weight:600; margin-top:2px;}
+.switch{ position:relative; width:50px; height:28px; }
+.switch input{ display:none; }
+.switch .track{ position:absolute; inset:0; background:var(--line); border-radius:999px; transition:.2s; }
+.switch .thumb{ position:absolute; top:3px; left:3px; width:22px; height:22px; background:#fff; border-radius:50%; transition:.2s; box-shadow:0 1px 3px rgba(0,0,0,.3); }
+.switch input:checked + .track{ background:var(--mint-dark); }
+.switch input:checked + .track .thumb{ transform:translateX(22px); }
+.rate-options{ display:flex; gap:8px; }
+.rate-btn{ flex:1; padding:10px 4px; border-radius:12px; border:2px solid var(--line); background:var(--cream); font-size:12px; font-weight:800; color:var(--ink-soft); }
+.rate-btn.active{ background:var(--mint); border-color:var(--mint-dark); color:#fff; }
+.badges-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:8px; }
+.badge-cell{ background:var(--card); border:2px solid var(--line); border-radius:16px; padding:10px 6px; text-align:center; }
+.badge-cell .ic{ font-size:24px; display:block; margin-bottom:4px; filter:grayscale(1); opacity:.35; }
+.badge-cell.got .ic{ filter:none; opacity:1; }
+.badge-cell .nm{ font-size:9px; font-weight:800; color:var(--ink-soft); }
+
+/* toast */
+#toast{
+  position:fixed; left:50%; bottom:calc(90px + var(--safe-bottom)); transform:translateX(-50%) translateY(20px);
+  background:var(--ink); color:#fff; padding:10px 18px; border-radius:999px; font-size:13px; font-weight:800;
+  z-index:100; opacity:0; transition:.25s; max-width:90%; text-align:center; pointer-events:none;
+}
+#toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* custom confirm modal (window.confirm is unreliable in standalone/webview mode) */
+#confirm-overlay{
+  position:fixed; inset:0; background:rgba(40,30,50,0.45); z-index:200; display:none;
+  align-items:center; justify-content:center; padding:24px;
+}
+#confirm-overlay.show{ display:flex; }
+.confirm-box{
+  background:var(--card); border-radius:var(--radius-lg); padding:22px 20px; max-width:340px; width:100%;
+  box-shadow:0 10px 0 rgba(0,0,0,0.15); text-align:center; animation:fadein .2s ease;
+}
+.confirm-msg{ font-size:15px; font-weight:800; color:var(--ink); line-height:1.6; margin-bottom:18px; white-space:pre-line; }
+.confirm-actions{ display:flex; gap:10px; }
+.confirm-actions .btn{ flex:1; padding:13px 8px; font-size:14px; }
+.confirm-cancel{ background:var(--cream); color:var(--ink-soft); border:2px solid var(--line); box-shadow:0 4px 0 var(--line); }
+.confirm-ok{ color:#fff; background:linear-gradient(180deg, var(--coral), var(--coral-dark)); box-shadow:0 4px 0 var(--coral-dark); }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="bg-blob blob1"></div>
+  <div class="bg-blob blob2"></div>
+  <div class="bg-blob blob3"></div>
+  <div class="bg-blob blob4"></div>
+
+  <!-- ================= ホーム画面 ================= -->
+  <section id="home-screen" class="screen active">
+    <h1 class="title">英検5級 タイムアタック</h1>
+    <p class="subtitle">すきなジャンルをえらんで れんしゅうしよう！</p>
+    <h2 class="section-title">📚 ジャンルをえらぶ</h2>
+    <div id="genre-list"></div>
+  </section>
+
+  <!-- ================= 問題画面 ================= -->
+  <section id="quiz-screen" class="screen">
+    <div class="quiz-top">
+      <button class="exit-btn" id="quiz-exit">✕</button>
+      <div class="combo-badge" id="combo-badge">🔥 0 コンボ</div>
+    </div>
+    <div class="timer-num" id="timer-num">60</div>
+    <div class="timebar-track"><div class="timebar-fill" id="timebar-fill" style="width:100%"></div></div>
+    <div class="score-row">
+      <div>スコア<br><b id="quiz-score">0</b></div>
+      <div>正解<br><b id="quiz-correct">0</b></div>
+      <div>不正解<br><b id="quiz-wrong">0</b></div>
+    </div>
+    <div class="word-card" id="word-card">
+      <div class="judge-pop" id="judge-pop">○</div>
+      <div class="word-en" id="word-en">word</div>
+      <button class="speak-btn" id="speak-btn">🔊</button>
+    </div>
+    <div class="choices" id="choices"></div>
+  </section>
+
+  <!-- ================= 結果画面 ================= -->
+  <section id="result-screen" class="screen">
+    <div class="result-emoji" id="result-emoji">🎉</div>
+    <h1 class="title" id="result-title">けっか はっぴょう！</h1>
+    <div id="newrecord-area"></div>
+    <div id="badge-unlock-area"></div>
+    <div class="result-grid">
+      <div class="result-stat"><div class="val" id="r-score">0</div><div class="lbl">スコア</div></div>
+      <div class="result-stat"><div class="val" id="r-correct">0</div><div class="lbl">正解数</div></div>
+      <div class="result-stat"><div class="val" id="r-accuracy">0%</div><div class="lbl">正答率</div></div>
+      <div class="result-stat"><div class="val" id="r-time">0秒</div><div class="lbl">遊んだ時間</div></div>
+      <div class="result-stat"><div class="val" id="r-combo">0</div><div class="lbl">最高コンボ</div></div>
+      <div class="result-stat"><div class="val" id="r-best">0</div><div class="lbl">自己ベスト</div></div>
+    </div>
+    <button class="btn btn-big" id="retry-btn">🔁 もういちど あそぶ</button>
+    <div style="height:10px;"></div>
+    <button class="btn btn-outline" id="result-home-btn">🏠 ホームへもどる</button>
+  </section>
+
+  <!-- ================= 間違えた問題 ================= -->
+  <section id="wrong-screen" class="screen">
+    <h1 class="title">❌ まちがえた もんだい</h1>
+    <p class="subtitle">タップして はつおんを かくにんしよう</p>
+    <div id="wrong-list"></div>
+  </section>
+
+  <!-- ================= ランキング ================= -->
+  <section id="ranking-screen" class="screen">
+    <h1 class="title">🏆 ランキング</h1>
+    <p class="subtitle">ジャンルべつの きろく</p>
+    <div id="ranking-list"></div>
+    <h2 class="section-title">🎖 あつめたバッジ</h2>
+    <div class="badges-grid" id="badges-grid"></div>
+  </section>
+
+  <!-- ================= 設定 ================= -->
+  <section id="settings-screen" class="screen">
+    <h1 class="title">⚙ 設定</h1>
+    <div class="set-row">
+      <div><div class="set-label">🎵 BGM</div><div class="set-sub">プレイ中の音楽</div></div>
+      <label class="switch"><input type="checkbox" id="set-bgm"><span class="track"><span class="thumb"></span></span></label>
+    </div>
+    <div class="set-row">
+      <div><div class="set-label">🔔 効果音</div><div class="set-sub">正解・不正解の音</div></div>
+      <label class="switch"><input type="checkbox" id="set-se"><span class="track"><span class="thumb"></span></span></label>
+    </div>
+    <div class="set-row" style="flex-direction:column; align-items:stretch; gap:10px;">
+      <div class="set-label">🗣 読み上げ速度</div>
+      <div class="rate-options">
+        <button class="rate-btn" data-rate="normal">ふつう</button>
+        <button class="rate-btn" data-rate="slow">ゆっくり</button>
+        <button class="rate-btn" data-rate="veryslow">かなりゆっくり</button>
+      </div>
+    </div>
+    <div class="set-row">
+      <div><div class="set-label">🌙 ダークモード</div><div class="set-sub">画面を暗くする</div></div>
+      <label class="switch"><input type="checkbox" id="set-dark"><span class="track"><span class="thumb"></span></span></label>
+    </div>
+    <button class="btn btn-outline" id="reset-data-btn" style="margin-top:18px; color:#C0395A;">🗑 きろくをすべてリセット</button>
+  </section>
+
+  <!-- ================= ボトムナビ ================= -->
+  <nav class="bottom-nav" id="bottom-nav">
+    <button class="nav-btn active" data-screen="home"><span class="ic">🏠</span>ホーム</button>
+    <button class="nav-btn" data-screen="ranking"><span class="ic">🏆</span>ランキング</button>
+    <button class="nav-btn" data-screen="wrong"><span class="ic">❌</span>まちがい</button>
+    <button class="nav-btn" data-screen="settings"><span class="ic">⚙</span>設定</button>
+  </nav>
+</div>
+
+<div id="toast"></div>
+<div class="particle-layer" id="particle-layer"></div>
+
+<div id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-msg" id="confirm-msg"></div>
+    <div class="confirm-actions">
+      <button class="btn confirm-cancel" id="confirm-cancel-btn">キャンセル</button>
+      <button class="btn confirm-ok" id="confirm-ok-btn">はい</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   英検5級 英単語タイムアタック — メインスクリプト
+   構成:
+   1. 単語データ
+   2. ストレージ・設定管理
+   3. オーディオ（効果音・BGM・読み上げ）
+   4. 画面遷移
+   5. クイズロジック
+   6. 結果・記録・バッジ
+   7. 間違えた問題 / ランキング / 設定 画面
+   8. 演出（紙吹雪・スター・トースト）
+   ================================================================ */
+
+/* ---------- 1. 単語データ ---------- */
+const GENRES = {
+  adj: {
+    name: "①形容詞・副詞・前置詞", emoji: "🌈", short: "形容詞など",
+    words: [
+      ["new","新しい"],["old","古い"],["big","大きい"],["large","大きい、広い"],["small","小さい"],
+      ["fast","速い"],["early","早い"],["slow","遅い"],["long","長い"],["short","短い"],
+      ["happy","うれしい"],["sad","悲しい"],["angry","怒った"],["tired","疲れた"],["good","よい"],
+      ["nice","すてきな"],["bad","悪い"],["many","たくさんの（数）"],["much","たくさんの（量）"],["beautiful","美しい"],
+      ["great","すばらしい"],["sweet","甘い"],["right","右の"],["left","左の"],["very","とても"],
+      ["well","上手に"],["cute","かわいい"],["pretty","かわいい"],["in","～の中"],["on","～の上"],
+      ["under","～の下"],["by","～のそば、～によって"],["at","～に、～で"],["after","～の後"],["before","～の前"],
+      ["but","でも"],["near","～の近く"],["about","約、～について"],["or","～か…"],["and","～と…"]
+    ]
+  },
+  noun: {
+    name: "②その他の名詞", emoji: "🍎", short: "名詞",
+    words: [
+      ["flower","花"],["tree","木"],["sky","空"],["window","窓"],["door","ドア"],
+      ["newspaper","新聞"],["table","テーブル"],["umbrella","傘"],["book","本"],["chair","いす"],
+      ["blackboard","黒板"],["notebook","ノート"],["pencil","鉛筆"],["eraser","消しゴム"],["ruler","定規"],
+      ["wall","壁"],["cap","帽子"],["cup","カップ"],["glass","コップ"],["shirt","シャツ"],
+      ["game","試合、ゲーム"],["party","パーティー"],["hair","髪"],["eye","目"],["ear","耳"],
+      ["hand","手"],["tea","紅茶"],["coffee","コーヒー"],["juice","ジュース"],["sugar","砂糖"],
+      ["salt","塩"],["bag","かばん"],["desk","机"],["computer","コンピューター"],["letter","手紙"],
+      ["breakfast","朝食"],["lunch","昼食"],["dinner","夕食"]
+    ]
+  },
+  phrase: {
+    name: "③重要熟語", emoji: "💬", short: "熟語",
+    words: [
+      ["after school","放課後"],["over there","あそこで"],["All right.","いいですよ。"],["Of course.","もちろん。"],
+      ["Thank you for ～.","～をありがとう。"],["You're welcome.","どういたしまして。"],["Here you are.","はい、どうぞ。"],
+      ["Here it is.","はい、どうぞ。"],["Good morning.","おはようございます。"],["Good night.","おやすみなさい。"],
+      ["Have a nice (good) ～.","よい～を。"],["It's time for ～.","～する時間です。"],["Pass me the ～.","～を取ってください。"],
+      ["in the morning","朝に、午前中に"],["in the afternoon","午後に"],["at night","夜に"],["Welcome to ～","ようこそ～へ。"],
+      ["Me, too.","私も。"],["You, too.","あなたも。"],["a little","少し"],["a lot of ～","たくさんの～"],
+      ["on TV","テレビで"],["by 乗り物","乗り物で"],["It's mine.","私のです。"],["from A to B","AからBまで"],
+      ["late for ～","～に遅れる"]
+    ]
+  },
+  basic150: {
+    name: "④絶対に覚える超基本150語", emoji: "⭐", short: "基本150",
+    words: [
+      ["pen","ペン"],["like","～が好き"],["piano","ピアノ"],["sing","歌う"],["play","～をする"],
+      ["dog","犬"],["tomato","トマト"],["go","行く"],["good","よい"],["big","大きい"],
+      ["make","～を作る"],["boy","男の子"],["girl","女の子"],["apple","りんご"],["love","～を愛する"],
+      ["drink","～を飲む"],["swim","泳ぐ"],["banana","バナナ"],["book","本"],["eat","～を食べる"],
+      ["study","～を勉強する"],["man","男の人"],["woman","女の人"],["bird","鳥"],["box","箱"],
+      ["bus","バス"],["desk","机"],["can","～できる"],["sit","すわる"],["run","走る"],
+      ["cat","ねこ"],["ball","ボール"],["bag","バッグ"],["cook","～を料理する"],["milk","牛乳"],
+      ["mother","お母さん"],["father","お父さん"],["food","食べ物"],["today","今日"],["egg","たまご"],
+      ["car","車"],["zoo","動物園"],["cut","～を切る"],["station","駅"],["hat","ぼうし"],
+      ["hot","あつい"],["many","たくさんの"],["cold","寒い"],["bookstore","本屋"],["flower","花"],
+      ["elephant","ぞう"],["fish","魚"],["card","カード"],["color","色"],["animal","動物"],
+      ["bed","ベッド"],["student","学生"],["camera","カメラ"],["get","～を手に入れる"],["happy","しあわせな"],
+      ["cap","ぼうし"],["family","家族"],["have","～を持っている"],["day","日"],["come","来る"],
+      ["friend","友達"],["read","～を読む"],["coffee","コーヒー"],["watch","～を観る"],["clean","～をそうじする"],
+      ["give","～をあげる"],["speak","～を話す"],["school","学校"],["see","～を見る"],["cup","カップ"],
+      ["game","ゲーム、試合"],["morning","朝"],["now","今"],["open","～を開ける"],["close","～を閉じる"],
+      ["nice","よい"],["uncle","おじ"],["aunt","おば"],["great","すばらしい"],["bread","パン"],
+      ["brother","兄弟"],["sister","姉妹"],["fruit","くだもの"],["name","名前"],["room","部屋"],
+      ["breakfast","朝ごはん"],["lunch","お昼ごはん"],["dinner","夜ごはん"],["what","何"],["when","いつ"],
+      ["where","どこで"],["which","どれ"],["who","だれ"],["whose","だれの"],["why","なぜ"],
+      ["how","どうやって"],["sleepy","ねむい"],["tomorrow","明日"],["city","都市"],["help","～を助ける"],
+      ["doctor","お医者さん"],["tree","木"],["old","古い"],["take","～を取る"],["short","短い"],
+      ["sleep","寝る"],["talk","話す"],["bike","自転車"],["math","算数"],["new","新しい"],
+      ["shop","店"],["pet","ペット"],["rainy","雨の"],["rain","雨が降る"],["chair","いす"],
+      ["hungry","おなかが空いた"],["window","窓"],["dance","ダンスする"],["small","小さい"],["bicycle","自転車"],
+      ["soccer","サッカー"],["baseball","野球"],["tennis","テニス"],["basketball","バスケットボール"],["homework","宿題"],
+      ["look at","～を見る"],["before","～の前に"],["picture","絵、写真"],["please","お願いします"],["house","家"],
+      ["train","電車"],["walk","歩く"],["work","働く"],["long","長い"],["art","美術"],
+      ["sea","海"],["next","次の"],["bank","銀行"],["birthday","誕生日"],["door","ドア"],
+      ["umbrella","カサ"],["grandfather","おじいちゃん"],["grandmother","おばあちゃん"],["know","～を知ってる"],["music","音楽"]
+    ]
+  },
+  places: {
+    name: "⑤国・場所", emoji: "🗺️", short: "国・場所",
+    words: [
+      ["Japan","日本"],["America","アメリカ"],["Canada","カナダ"],["Australia","オーストラリア"],["Spain","スペイン"],
+      ["China","中国"],["France","フランス"],["Germany","ドイツ"],["Brazil","ブラジル"],["country","国"],
+      ["Africa","アフリカ"],["Asia","アジア"],["Europe","ヨーロッパ"],["place","場所"],["station","駅"],
+      ["airport","空港"],["park","公園"],["cityhall","市役所"],["hospital","病院"],["post office","郵便局"],
+      ["store","店"],["supermarket","スーパー"],["mountain","山"],["sea","海"],["restaurant","レストラン"],
+      ["home","家/故郷"],["house","一軒家"],["room","部屋"],["bedroom","寝室"],["kitchen","キッチン/台所"],
+      ["bathroom","（トイレつきの）お風呂"],["classroom","教室"],["gym","体育館"]
+    ]
+  },
+  sports: {
+    name: "⑥スポーツ", emoji: "⚽", short: "スポーツ",
+    words: [
+      ["basketball","バスケットボール"],["tennis","テニス"],["baseball","野球"],["soccer","サッカー"],["badminton","バドミントン"],
+      ["tabletennis","卓球"],["surfing","サーフィン"],["swimming","水泳"],["marathon","マラソン"],["boxing","ボクシング"]
+    ]
+  },
+  weather: {
+    name: "⑦天気", emoji: "☀️", short: "天気",
+    words: [
+      ["sunny","晴れている"],["cloudy","曇っている"],["rainy","雨が降っている"],["snowy","雪が降っている"],["foggy","霧がかっている"],
+      ["windy","風が強い"],["sunshine","晴天"],["thesun","太陽"],["cloud","雲"],["rain","雨/雨が降る"],
+      ["shower","雨/にわか雨"],["snow","雪/雪が降る"],["fog","霧"],["clearup","晴れる"]
+    ]
+  }
+};
+const GENRE_TAG_CLASS = {
+  adj:"tag-adj", noun:"tag-noun", phrase:"tag-phrase", basic150:"tag-basic150",
+  places:"tag-places", sports:"tag-sports", weather:"tag-weather"
+};
+
+/* ---------- 2. ストレージ・設定管理 ---------- */
+const LS = {
+  settings:"eiken_settings_v1",
+  records:"eiken_records_v1",
+  wrong:"eiken_wrong_v1",
+  badges:"eiken_badges_v1",
+  totalPlayed:"eiken_total_played_v1"
+};
+
+function loadJSON(key, fallback){
+  try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+  catch(e){ return fallback; }
+}
+function saveJSON(key, val){
+  try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){ /* storage full or unavailable */ }
+}
+
+let settings = loadJSON(LS.settings, { bgm:true, se:true, rate:"normal", dark:false });
+let records  = loadJSON(LS.records, {});   // { adj:{high,total,attempts,maxCombo}, ... }
+let wrongDB  = loadJSON(LS.wrong, {});     // { adj:{ "new":{en,ja,count} }, ... }
+let badges   = loadJSON(LS.badges, {
+  firstClear:false, combo10:false, combo20:false, combo30:false, newRecord:false,
+  play100:false, play500:false, allGenreClear:false, perfectRound:false, highScore300:false
+});
+let totalPlayed = loadJSON(LS.totalPlayed, 0);
+
+function applyTheme(){
+  document.documentElement.setAttribute("data-theme", settings.dark ? "dark" : "light");
+}
+applyTheme();
+
+/* ---------- 3. オーディオ ---------- */
+let actx = null;
+function getCtx(){
+  if(!actx){
+    actx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if(actx.state === "suspended") actx.resume();
+  return actx;
+}
+
+// シンプルな単音を鳴らす
+function tone(freq, start, dur, type, vol){
+  const ctx = getCtx();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type || "sine";
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0.0001, ctx.currentTime + start);
+  gain.gain.exponentialRampToValueAtTime(vol || 0.15, ctx.currentTime + start + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + start + dur);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(ctx.currentTime + start);
+  osc.stop(ctx.currentTime + start + dur + 0.02);
+}
+
+const SE = {
+  start(){ tone(523,0,.12,"triangle"); tone(659,.1,.12,"triangle"); tone(784,.2,.18,"triangle"); },
+  correct(){ tone(880,0,.09,"square",.12); tone(1175,.08,.16,"square",.12); },
+  wrong(){ tone(220,0,.18,"sawtooth",.12); tone(160,.12,.22,"sawtooth",.1); },
+  end(){ tone(659,0,.12,"triangle"); tone(523,.12,.12,"triangle"); tone(392,.24,.25,"triangle"); },
+  newrecord(){ [523,659,784,1047].forEach((f,i)=>tone(f,i*.11,.16,"triangle",.14)); },
+  tap(){ tone(700,0,.04,"square",.06); }
+};
+function playSE(name){ if(settings.se){ try{ SE[name](); }catch(e){} } }
+
+// BGM: かんたんなループ（子ども向け・小音量）
+let bgmTimer = null;
+const BGM_NOTES = [523,587,659,523,659,784,659,587]; // C D E C E G E D
+let bgmIndex = 0;
+function startBGM(){
+  if(!settings.bgm || bgmTimer) return;
+  bgmIndex = 0;
+  bgmTimer = setInterval(()=>{
+    if(!settings.bgm) return;
+    const f = BGM_NOTES[bgmIndex % BGM_NOTES.length];
+    tone(f, 0, .35, "sine", .035);
+    bgmIndex++;
+  }, 420);
+}
+function stopBGM(){
+  if(bgmTimer){ clearInterval(bgmTimer); bgmTimer = null; }
+}
+function toggleBGM(){ settings.bgm ? startBGM() : stopBGM(); }
+
+// 読み上げ
+let voicesCache = [];
+function loadVoices(){
+  voicesCache = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+}
+if(window.speechSynthesis){
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+}
+function rateValue(){
+  if(settings.rate === "slow") return 0.72;
+  if(settings.rate === "veryslow") return 0.5;
+  return 0.95;
+}
+function speak(text){
+  if(!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "en-US";
+  u.rate = rateValue();
+  u.pitch = 1.05;
+  const v = voicesCache.find(v => v.lang === "en-US") || voicesCache.find(v => v.lang && v.lang.startsWith("en"));
+  if(v) u.voice = v;
+  window.speechSynthesis.speak(u);
+}
+
+/* ---------- 4. 画面遷移 ---------- */
+const screens = ["home","quiz","result","wrong","ranking","settings"];
+function showScreen(name){
+  screens.forEach(s=>{
+    document.getElementById(s+"-screen").classList.toggle("active", s===name);
+  });
+  document.querySelectorAll(".nav-btn").forEach(btn=>{
+    btn.classList.toggle("active", btn.dataset.screen === name);
+  });
+  document.getElementById("bottom-nav").style.display = (name === "quiz") ? "none" : "flex";
+  if(name === "wrong") renderWrongList();
+  if(name === "ranking") renderRanking();
+  if(name === "settings") renderSettings();
+  if(name === "home") renderHome();
+  window.scrollTo(0,0);
+}
+document.querySelectorAll(".nav-btn").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    playSE("tap");
+    showScreen(btn.dataset.screen);
+  });
+});
+
+/* ---------- ホーム画面 描画 ---------- */
+function genreStatLine(key){
+  const r = records[key];
+  if(!r || !r.attempts) return "まだ きろくがありません";
+  return `さいこう ${r.high}点 ／ ${r.attempts}回 プレイ`;
+}
+function renderHome(){
+  const list = document.getElementById("genre-list");
+  list.innerHTML = "";
+  Object.keys(GENRES).forEach(key=>{
+    const g = GENRES[key];
+    const card = document.createElement("div");
+    card.className = "genre-card g-"+key;
+    card.innerHTML = `
+      <div class="genre-emoji">${g.emoji}</div>
+      <div class="genre-info">
+        <div class="gname">${g.name}</div>
+        <div class="gstat">${genreStatLine(key)}</div>
+      </div>
+      <button class="genre-play btn">▶ あそぶ</button>
+    `;
+    card.querySelector(".genre-play").addEventListener("click", ()=>{
+      getCtx(); // user gesture でAudioContext起動
+      startQuiz(key);
+    });
+    list.appendChild(card);
+  });
+}
+
+/* ---------- 5. クイズロジック ---------- */
+let quiz = null; // 現在のクイズ状態
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function startQuiz(genreKey){
+  const words = GENRES[genreKey].words;
+  quiz = {
+    genre: genreKey,
+    queue: shuffle(words),
+    qIndex: 0,
+    score: 0,
+    correct: 0,
+    wrong: 0,
+    combo: 0,
+    maxCombo: 0,
+    timeLeft: 60,
+    startedAt: Date.now(),
+    answering: false,
+    timerId: null
+  };
+  document.getElementById("combo-badge").classList.remove("show");
+  updateQuizHUD();
+  nextQuestion();
+  startBGM();
+  playSE("start");
+  showScreen("quiz");
+  quiz.timerId = setInterval(tickTimer, 1000);
+}
+
+function tickTimer(){
+  quiz.timeLeft--;
+  if(quiz.timeLeft <= 0){
+    quiz.timeLeft = 0;
+    updateTimerDisplay();
+    endQuiz(false);
+    return;
+  }
+  updateTimerDisplay();
+}
+
+function updateTimerDisplay(){
+  const t = quiz.timeLeft;
+  const numEl = document.getElementById("timer-num");
+  const fillEl = document.getElementById("timebar-fill");
+  numEl.textContent = t;
+  const pct = Math.max(0, (t/60)*100);
+  fillEl.style.width = pct + "%";
+  let color = "var(--mint-dark)";
+  if(pct <= 16.6) color = "var(--coral-dark)";
+  else if(pct <= 33.3) color = "var(--sun-dark)";
+  fillEl.style.background = color;
+  numEl.classList.toggle("warn", t <= 10);
+  fillEl.classList.toggle("blink", t <= 10);
+}
+
+function updateQuizHUD(){
+  document.getElementById("quiz-score").textContent = quiz.score;
+  document.getElementById("quiz-correct").textContent = quiz.correct;
+  document.getElementById("quiz-wrong").textContent = quiz.wrong;
+  updateTimerDisplay();
+}
+
+function nextQuestion(){
+  if(quiz.qIndex >= quiz.queue.length){
+    quiz.queue = shuffle(GENRES[quiz.genre].words);
+    quiz.qIndex = 0;
+  }
+  const pair = quiz.queue[quiz.qIndex++];
+  const [en, ja] = pair;
+  quiz.current = { en, ja };
+  quiz.answering = false;
+
+  document.getElementById("word-en").textContent = en;
+  document.getElementById("judge-pop").className = "judge-pop";
+
+  // 4択を作る
+  const all = GENRES[quiz.genre].words.filter(w => w[0] !== en);
+  const wrongChoices = shuffle(all).slice(0,3).map(w => w[1]);
+  const choices = shuffle([ja, ...wrongChoices]);
+
+  const choicesEl = document.getElementById("choices");
+  choicesEl.innerHTML = "";
+  choices.forEach(choiceJa=>{
+    const b = document.createElement("button");
+    b.className = "choice-btn";
+    b.textContent = choiceJa;
+    b.addEventListener("click", ()=> handleAnswer(b, choiceJa));
+    choicesEl.appendChild(b);
+  });
+}
+
+document.getElementById("speak-btn").addEventListener("click", ()=>{
+  if(quiz && quiz.current) speak(quiz.current.en);
+});
+
+function handleAnswer(btnEl, chosenJa){
+  if(!quiz || quiz.answering) return;
+  quiz.answering = true;
+  const correctJa = quiz.current.ja;
+  const isCorrect = chosenJa === correctJa;
+  const allBtns = document.querySelectorAll(".choice-btn");
+  allBtns.forEach(b=> b.disabled = true);
+
+  const pop = document.getElementById("judge-pop");
+
+  if(isCorrect){
+    btnEl.classList.add("correct");
+    quiz.correct++;
+    quiz.combo++;
+    quiz.maxCombo = Math.max(quiz.maxCombo, quiz.combo);
+    const comboBonus = Math.min(quiz.combo, 10) * 2;
+    quiz.score += 10 + comboBonus;
+    pop.textContent = "○";
+    pop.className = "judge-pop o fire";
+    playSE("correct");
+    spawnStars();
+    if(navigator.vibrate) navigator.vibrate(40);
+    updateComboBadge();
+    checkComboBadges();
+  } else {
+    btnEl.classList.add("wrong");
+    btnEl.classList.add("shake");
+    allBtns.forEach(b=>{ if(b.textContent === correctJa) b.classList.add("correct"); });
+    quiz.wrong++;
+    quiz.combo = 0;
+    pop.textContent = "✕";
+    pop.className = "judge-pop x fire";
+    playSE("wrong");
+    saveWrongAnswer(quiz.genre, quiz.current.en, quiz.current.ja);
+    updateComboBadge();
+  }
+  updateQuizHUD();
+  totalPlayed++;
+  saveJSON(LS.totalPlayed, totalPlayed);
+
+  setTimeout(()=>{
+    if(quiz && quiz.timeLeft > 0){
+      nextQuestion();
+    }
+  }, isCorrect ? 650 : 1100);
+}
+
+function updateComboBadge(){
+  const el = document.getElementById("combo-badge");
+  if(quiz.combo >= 2){
+    el.textContent = "🔥 " + quiz.combo + " コンボ";
+    el.classList.add("show");
+  } else {
+    el.classList.remove("show");
+  }
+}
+
+document.getElementById("quiz-exit").addEventListener("click", ()=>{
+  if(!quiz) return;
+  showConfirm("クイズを やめて ホームに もどりますか？", ()=>{
+    endQuiz(true);
+  });
+});
+
+function endQuiz(aborted){
+  if(quiz.timerId){ clearInterval(quiz.timerId); quiz.timerId = null; }
+  stopBGM();
+  playSE("end");
+  const elapsed = Math.min(60, Math.round((Date.now() - quiz.startedAt)/1000));
+  showResult(quiz, elapsed, aborted);
+  quiz = null;
+}
+
+/* ---------- 6. 結果・記録・バッジ ---------- */
+function showResult(q, elapsedSec, aborted){
+  const acc = (q.correct+q.wrong) > 0 ? Math.round((q.correct/(q.correct+q.wrong))*100) : 0;
+
+  // 記録更新
+  if(!records[q.genre]) records[q.genre] = { high:0, total:0, attempts:0, maxCombo:0 };
+  const rec = records[q.genre];
+  const isFirstEver = rec.attempts === 0;
+  const isNewRecord = q.score > rec.high;
+  rec.attempts++;
+  rec.total += q.score;
+  rec.high = Math.max(rec.high, q.score);
+  rec.maxCombo = Math.max(rec.maxCombo, q.maxCombo);
+  saveJSON(LS.records, records);
+
+  document.getElementById("r-score").textContent = q.score;
+  document.getElementById("r-correct").textContent = q.correct;
+  document.getElementById("r-accuracy").textContent = acc + "%";
+  document.getElementById("r-time").textContent = elapsedSec + "秒";
+  document.getElementById("r-combo").textContent = q.maxCombo;
+  document.getElementById("r-best").textContent = rec.high;
+  document.getElementById("result-title").textContent = aborted ? "とちゅう しゅうりょう" : "けっか はっぴょう！";
+  document.getElementById("result-emoji").textContent = acc >= 80 ? "🏅" : (acc >= 50 ? "🎉" : "💪");
+
+  const newRecordArea = document.getElementById("newrecord-area");
+  newRecordArea.innerHTML = "";
+  if(isNewRecord && q.score > 0){
+    newRecordArea.innerHTML = `<div class="newrecord-banner">🎉 NEW RECORD!! 🎉</div>`;
+    launchConfetti();
+    playSE("newrecord");
+    badges.newRecord = true;
+  }
+
+  // バッジ判定
+  const unlocked = [];
+  if(isFirstEver && !badges.firstClear){ badges.firstClear = true; unlocked.push("🥇 初クリア"); }
+  if(q.maxCombo >= 10 && !badges.combo10){ badges.combo10 = true; unlocked.push("🔥 10問連続正解"); }
+  if(q.maxCombo >= 20 && !badges.combo20){ badges.combo20 = true; unlocked.push("⚡ 20問連続正解"); }
+  if(q.maxCombo >= 30 && !badges.combo30){ badges.combo30 = true; unlocked.push("💥 30問連続正解"); }
+  if(isNewRecord && q.score > 0 && unlocked.indexOf("🏆 新記録")===-1){ unlocked.push("🏆 新記録"); }
+  if(totalPlayed >= 100 && !badges.play100){ badges.play100 = true; unlocked.push("💯 100問プレイ"); }
+  if(totalPlayed >= 500 && !badges.play500){ badges.play500 = true; unlocked.push("🚀 500問プレイ"); }
+  const allGenresPlayed = Object.keys(GENRES).every(k => records[k] && records[k].attempts > 0);
+  if(allGenresPlayed && !badges.allGenreClear){ badges.allGenreClear = true; unlocked.push("🌟 全ジャンルクリア"); }
+  if(q.wrong === 0 && q.correct >= 10 && !badges.perfectRound){ badges.perfectRound = true; unlocked.push("🎯 パーフェクトクリア"); }
+  if(q.score >= 300 && !badges.highScore300){ badges.highScore300 = true; unlocked.push("👑 300点達成"); }
+  saveJSON(LS.badges, badges);
+
+  const badgeArea = document.getElementById("badge-unlock-area");
+  badgeArea.innerHTML = "";
+  unlocked.forEach(name=>{
+    const d = document.createElement("div");
+    d.className = "badge-unlock";
+    d.innerHTML = `<span style="font-size:22px;">🎖</span><span>あたらしいバッジ「${name}」を かくとく！</span>`;
+    badgeArea.appendChild(d);
+  });
+
+  document.getElementById("retry-btn").onclick = ()=>{
+    getCtx();
+    startQuiz(q.genre);
+  };
+  document.getElementById("result-home-btn").onclick = ()=> showScreen("home");
+
+  showScreen("result");
+}
+
+/* ---------- 7-a. 間違えた問題 ---------- */
+function saveWrongAnswer(genreKey, en, ja){
+  if(!wrongDB[genreKey]) wrongDB[genreKey] = {};
+  if(!wrongDB[genreKey][en]) wrongDB[genreKey][en] = { en, ja, count:0, time:Date.now() };
+  wrongDB[genreKey][en].count++;
+  wrongDB[genreKey][en].time = Date.now();
+  saveJSON(LS.wrong, wrongDB);
+}
+
+function renderWrongList(){
+  const container = document.getElementById("wrong-list");
+  let all = [];
+  Object.keys(wrongDB).forEach(genreKey=>{
+    Object.values(wrongDB[genreKey]).forEach(item=>{
+      all.push({ ...item, genre:genreKey });
+    });
+  });
+  all.sort((a,b)=> b.time - a.time);
+
+  if(all.length === 0){
+    container.innerHTML = `<div class="empty-state"><span class="ic">🌈</span>まちがえた もんだいは ありません！<br>すごい！</div>`;
+    return;
+  }
+
+  const clearBtn = document.createElement("button");
+  clearBtn.className = "btn btn-outline";
+  clearBtn.textContent = "🗑 すべてクリアする";
+  clearBtn.style.marginBottom = "14px";
+  clearBtn.onclick = ()=>{
+    showConfirm("まちがえた問題の記録を すべて削除しますか？", ()=>{
+      wrongDB = {};
+      saveJSON(LS.wrong, wrongDB);
+      renderWrongList();
+      showToast("リストをクリアしました");
+    });
+  };
+  container.innerHTML = "";
+  container.appendChild(clearBtn);
+
+  all.forEach(item=>{
+    const row = document.createElement("div");
+    row.className = "wrong-row";
+    const tagClass = GENRE_TAG_CLASS[item.genre] || "";
+    row.innerHTML = `
+      <div style="flex:1; min-width:0;">
+        <span class="wrong-tag ${tagClass}">${GENRES[item.genre] ? GENRES[item.genre].short : ""}</span>
+        <div class="wrong-en">${item.en}</div>
+        <div class="wrong-ja">${item.ja} ・ ${item.count}回まちがえた</div>
+      </div>
+      <button class="mini-speak">🔊</button>
+    `;
+    row.querySelector(".mini-speak").addEventListener("click", ()=> speak(item.en));
+    container.appendChild(row);
+  });
+}
+
+/* ---------- 7-b. ランキング ---------- */
+function renderRanking(){
+  const list = document.getElementById("ranking-list");
+  list.innerHTML = "";
+  Object.keys(GENRES).forEach(key=>{
+    const g = GENRES[key];
+    const r = records[key] || { high:0, total:0, attempts:0, maxCombo:0 };
+    const avg = r.attempts > 0 ? Math.round(r.total / r.attempts) : 0;
+    const card = document.createElement("div");
+    card.className = "rank-card";
+    card.innerHTML = `
+      <div class="rank-head"><span>${g.emoji}</span><span>${g.name}</span></div>
+      <div class="rank-grid">
+        <div><div class="v">${r.high}</div><div class="l">最高得点</div></div>
+        <div><div class="v">${avg}</div><div class="l">平均点</div></div>
+        <div><div class="v">${r.attempts}</div><div class="l">挑戦回数</div></div>
+        <div><div class="v">${r.maxCombo}</div><div class="l">最高コンボ</div></div>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+  renderBadgesGrid();
+}
+
+const BADGE_DEFS = [
+  { key:"firstClear", ic:"🥇", nm:"初クリア" },
+  { key:"combo10", ic:"🔥", nm:"10連続正解" },
+  { key:"combo20", ic:"⚡", nm:"20連続正解" },
+  { key:"combo30", ic:"💥", nm:"30連続正解" },
+  { key:"newRecord", ic:"🏆", nm:"新記録" },
+  { key:"highScore300", ic:"👑", nm:"300点達成" },
+  { key:"perfectRound", ic:"🎯", nm:"パーフェクト" },
+  { key:"play100", ic:"💯", nm:"100問プレイ" },
+  { key:"play500", ic:"🚀", nm:"500問プレイ" },
+  { key:"allGenreClear", ic:"🌟", nm:"全ジャンル制覇" }
+];
+function renderBadgesGrid(){
+  const grid = document.getElementById("badges-grid");
+  grid.innerHTML = "";
+  BADGE_DEFS.forEach(b=>{
+    const got = !!badges[b.key];
+    const cell = document.createElement("div");
+    cell.className = "badge-cell" + (got ? " got" : "");
+    cell.innerHTML = `<span class="ic">${b.ic}</span><span class="nm">${b.nm}</span>`;
+    grid.appendChild(cell);
+  });
+}
+function checkComboBadges(){
+  // クイズ中にリアルタイムでコンボバッジを取りたい場合のフック（結果画面でも確定判定する）
+}
+
+/* ---------- 7-c. 設定 ---------- */
+function renderSettings(){
+  document.getElementById("set-bgm").checked = settings.bgm;
+  document.getElementById("set-se").checked = settings.se;
+  document.getElementById("set-dark").checked = settings.dark;
+  document.querySelectorAll(".rate-btn").forEach(btn=>{
+    btn.classList.toggle("active", btn.dataset.rate === settings.rate);
+  });
+}
+document.getElementById("set-bgm").addEventListener("change", e=>{
+  settings.bgm = e.target.checked; saveJSON(LS.settings, settings); toggleBGM();
+});
+document.getElementById("set-se").addEventListener("change", e=>{
+  settings.se = e.target.checked; saveJSON(LS.settings, settings);
+  if(settings.se) playSE("tap");
+});
+document.getElementById("set-dark").addEventListener("change", e=>{
+  settings.dark = e.target.checked; saveJSON(LS.settings, settings); applyTheme();
+});
+document.querySelectorAll(".rate-btn").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    settings.rate = btn.dataset.rate;
+    saveJSON(LS.settings, settings);
+    renderSettings();
+    speak("hello");
+  });
+});
+document.getElementById("reset-data-btn").addEventListener("click", ()=>{
+  showConfirm("すべての記録（スコア・バッジ・まちがえた問題）を削除します。\nよろしいですか？", ()=>{
+    records = {}; wrongDB = {}; badges = {}; BADGE_DEFS.forEach(b=> badges[b.key] = false);
+    totalPlayed = 0;
+    saveJSON(LS.records, records); saveJSON(LS.wrong, wrongDB); saveJSON(LS.badges, badges); saveJSON(LS.totalPlayed, totalPlayed);
+    renderHome(); renderRanking(); renderWrongList();
+    showToast("すべての記録を削除しました");
+  });
+});
+
+/* ---------- 8. 演出 ---------- */
+function spawnStars(){
+  const layer = document.getElementById("particle-layer");
+  const card = document.getElementById("word-card");
+  const rect = card.getBoundingClientRect();
+  const cx = rect.left + rect.width/2;
+  const cy = rect.top + rect.height/2;
+  const n = 10;
+  for(let i=0;i<n;i++){
+    const star = document.createElement("div");
+    star.className = "star-p";
+    star.textContent = ["⭐","✨","🌟"][i%3];
+    const angle = (Math.PI*2*i)/n + Math.random()*0.4;
+    const dist = 70 + Math.random()*60;
+    const dx = Math.cos(angle)*dist;
+    const dy = Math.sin(angle)*dist;
+    star.style.left = cx + "px";
+    star.style.top = cy + "px";
+    star.style.setProperty("--fly", `translate(${dx}px,${dy}px)`);
+    layer.appendChild(star);
+    setTimeout(()=> star.remove(), 850);
+  }
+}
+
+const CONFETTI_COLORS = ["#FF7E9D","#FFD15C","#5FE0C3","#6FC6F2","#B9A8FF"];
+function launchConfetti(){
+  const layer = document.getElementById("particle-layer");
+  const n = 60;
+  for(let i=0;i<n;i++){
+    const c = document.createElement("div");
+    c.className = "confetti-p";
+    c.style.left = Math.random()*100 + "vw";
+    c.style.background = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
+    c.style.animationDuration = (2.2 + Math.random()*1.4) + "s";
+    c.style.borderRadius = Math.random() > .5 ? "50%" : "2px";
+    layer.appendChild(c);
+    setTimeout(()=> c.remove(), 4000);
+  }
+}
+
+let toastTimer = null;
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> t.classList.remove("show"), 2200);
+}
+
+/* window.confirm() は「ホーム画面に追加」したスタンドアロン表示や
+   一部のアプリ内ブラウザ（Documentsアプリ等）では動作しないことがあるため、
+   自前のモーダルで代用する */
+function showConfirm(message, onConfirm){
+  const overlay = document.getElementById("confirm-overlay");
+  document.getElementById("confirm-msg").textContent = message;
+  overlay.classList.add("show");
+
+  const okBtn = document.getElementById("confirm-ok-btn");
+  const cancelBtn = document.getElementById("confirm-cancel-btn");
+
+  function cleanup(){
+    overlay.classList.remove("show");
+    okBtn.removeEventListener("click", onOk);
+    cancelBtn.removeEventListener("click", onCancel);
+  }
+  function onOk(){ cleanup(); onConfirm(); }
+  function onCancel(){ cleanup(); }
+
+  okBtn.addEventListener("click", onOk);
+  cancelBtn.addEventListener("click", onCancel);
+}
+
+/* ---------- 初期化 ---------- */
+renderHome();
+renderSettings();
+showScreen("home");
+
+// iOS Safari: 初回タップでAudioContextを起動できるようにする
+document.addEventListener("touchstart", function unlock(){
+  getCtx();
+  document.removeEventListener("touchstart", unlock);
+}, { once:true });
+</script>
+</body>
+</html>
