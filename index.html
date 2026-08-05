@@ -13,9 +13,9 @@
   try{
     const source='https://cdn.jsdelivr.net/gh/g546fromaquaaro-code/Yuzu_eiken5_tango_basic@4aa0167f73506c9603b8a69e96d4e916c02e29b3/index.html';
     let html=await fetch(source,{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('load failed');return r.text()});
-    const oldNav='<button class="nav-btn active" data-screen="home"><span class="ic">🏠</span>ホーム</button>\n    <button class="nav-btn" data-screen="ranking"><span class="ic">🏆</span>ランキング</button>\n    <button class="nav-btn" data-screen="wrong"><span class="ic">❌</span>まちがい</button>\n    <button class="nav-btn" data-screen="settings"><span class="ic">⚙</span>設定</button>';
-    const newNav='<button class="nav-btn active" data-screen="home"><span class="ic">🏠</span>ホーム</button>\n    <a class="nav-btn" href="./words.html" style="text-decoration:none"><span class="ic">📖</span>単語</a>\n    <button class="nav-btn" data-screen="ranking"><span class="ic">🏆</span>ランキング</button>\n    <button class="nav-btn" data-screen="wrong"><span class="ic">❌</span>まちがい</button>\n    <button class="nav-btn" data-screen="settings"><span class="ic">⚙</span>設定</button>';
-    html=html.replace(oldNav,newNav);
+    const homeButton='<button class="nav-btn active" data-screen="home"><span class="ic">🏠</span>ホーム</button>';
+    const wordsButton='<a class="nav-btn" href="./words.html" style="text-decoration:none"><span class="ic">📖</span>単語</a>';
+    if(!html.includes('href="./words.html"')) html=html.replace(homeButton,homeButton+'\n    '+wordsButton);
     document.open();document.write(html);document.close();
   }catch(e){document.body.innerHTML='<div class="loading">読み込みに失敗しました。再読み込みしてください。</div>'}
 })();
