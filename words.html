@@ -19,14 +19,15 @@
 </main>
 <script>
 const WRONG_KEY='eiken_wrong_v1';
+const APP_SOURCE='https://cdn.jsdelivr.net/gh/g546fromaquaaro-code/Yuzu_eiken5_tango_basic@4aa0167f73506c9603b8a69e96d4e916c02e29b3/index.html';
 let GENRES={};let rows=[];let currentGenre='all';
 function loadWrong(){try{return JSON.parse(localStorage.getItem(WRONG_KEY)||'{}')}catch(e){return {}}}
 function mistakeCount(genre,en){const db=loadWrong();return Number(db?.[genre]?.[en]?.count||0)}
-function speak(text){if(!window.speechSynthesis)return; speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=.85;speechSynthesis.speak(u)}
+function speak(text){if(!window.speechSynthesis)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=.85;speechSynthesis.speak(u)}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 async function loadGenres(){
- const html=await fetch('./index.html',{cache:'no-store'}).then(r=>r.text());
- const start=html.indexOf('const GENRES ='); const end=html.indexOf('const GENRE_TAG_CLASS',start);
+ const html=await fetch(APP_SOURCE,{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('単語データを取得できませんでした');return r.text()});
+ const start=html.indexOf('const GENRES =');const end=html.indexOf('const GENRE_TAG_CLASS',start);
  if(start<0||end<0)throw new Error('単語データを取得できませんでした');
  const source=html.slice(start+'const GENRES ='.length,end).trim().replace(/;\s*$/,'');
  GENRES=Function('"use strict"; return ('+source+')')();
